@@ -11,6 +11,9 @@ st.write("Generates a new Fasta file from filtered results")
 fasta_file = st.file_uploader("FASTA", ".fasta")
 dta_filter_files = st.file_uploader("DTASelect-filter.txt", ".txt", accept_multiple_files=True)
 
+decoy_flag = st.text_input("Decoy Flag", "Reverse")
+contaminant_flag = st.text_input("Contaminant Flag", "contaminant")
+
 if st.button("Generate"):
 
     if not fasta_file:
@@ -29,6 +32,11 @@ if st.button("Generate"):
 
         locus_to_sequence_map = map_locus_to_sequence_from_fasta(fasta_lines)
         protein_locuses = list({result.protein.locus for result in results_list})
+        if decoy_flag and decoy_flag != "":
+            protein_locuses = [locus for locus in protein_locuses if decoy_flag not in locus]
+        if contaminant_flag and contaminant_flag != "":
+            protein_locuses = [locus for locus in protein_locuses if contaminant_flag not in locus]
+
         dta_filter_locus_to_sequence_map = {locus: locus_to_sequence_map[locus] for locus in protein_locuses}
 
         new_fasta_lines = fasta_from_locus_to_sequence_map(dta_filter_locus_to_sequence_map)
