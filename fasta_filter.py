@@ -31,7 +31,7 @@ if st.button("Generate"):
             results_list.extend(results)
 
         locus_to_sequence_map = map_locus_to_sequence_from_fasta(fasta_lines)
-        protein_locuses = list({result.protein.locus for result in results_list})
+        protein_locuses = list({protein.locus for result in results_list for protein in result.proteins})
         if decoy_flag and decoy_flag != "":
             protein_locuses = [locus for locus in protein_locuses if decoy_flag not in locus]
         if contaminant_flag and contaminant_flag != "":
