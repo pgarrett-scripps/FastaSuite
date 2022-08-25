@@ -6,13 +6,27 @@ from senpy.dtaSelectFilter.parser2 import read_file
 from utils import map_locus_to_sequence_from_fasta, fasta_from_locus_to_sequence_map
 
 st.title("FASTA Filter")
-st.write("Generates a new Fasta file from filtered results")
+with st.expander("Help"):
+    st.markdown("""
+    
+    This app will generate a FASTA file containing only identified proteins. You can then upload the filtered FASTA file  to IP2 to use a Library Search.
+    
+    **Input**
+    
+    **FASTA File**: Fasta file to filter (should be identical to the one used in the experiment)
+    
+    **Filter Files**: The files which contain identified proteins to filter the FASTA file (you can upload multiple)
+    
+    **Decoy & Contaminant Flags**: The flag which identifies decoy/contaminant proteins in the uploaded files. Protiens which contain this flag will be excluded from the filtered FASTA. ("Reverse_" for ">Reverse_sp|XXX|YYY" or "contaminant_" for ">contaminant_sp|XXX|YYY")
+    
+    *To Include Decoy or Contaminant proteins: leave the Flag input blank.
+    """)
 
 fasta_file = st.file_uploader("FASTA", ".fasta")
 dta_filter_files = st.file_uploader("DTASelect-filter.txt", ".txt", accept_multiple_files=True)
 
-decoy_flag = st.text_input("Decoy Flag", "Reverse")
-contaminant_flag = st.text_input("Contaminant Flag", "contaminant")
+decoy_flag = st.text_input("Decoy Flag", "Reverse", help="The string used to identify Decoy peptides")
+contaminant_flag = st.text_input("Contaminant Flag", "contaminant", help="The string used to identify contaminant peptides")
 
 if st.button("Generate"):
 
