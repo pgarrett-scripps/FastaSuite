@@ -38,16 +38,18 @@ with st.expander("Help"):
 
 fasta_file = st.file_uploader("Choose a fasta file", type=".fasta")
 
-decoy_flag = st.text_input("Decoy Flag", "DECOY_")
+decoy_flag = st.text_input("Decoy Flag", "DECOY_", help="The flag used to identify Decoy peptides: 'DECOY_' will result in '>DECOY_sp|XXXX|YYYY'")
 decoy_strategy = st.radio("Decoy Strategy", ('reverse', 'shuffle', 'markov', 'exchange', 'shifted reversal', 'deBruijn'), index=0)
 
 random_seed = None
 if decoy_strategy in {'shuffle', 'markov', 'deBruijn'}:
-    random_seed = st.number_input("random number seed", value=7878)
+    random_seed = st.number_input("random number seed", value=7878,
+                help="Used to initialize a pseudorandom number generator. Keeping the same number will allow for reproducible decoy generation.")
 
 static_amino_acids = None
 if decoy_strategy in {'shuffle', 'deBruijn'}:
-    static_amino_acids = st.multiselect(label='Static Residues', options=list(VALID_AMINO_ACIDS), default=None)
+    static_amino_acids = st.multiselect(label='Static Residues', options=list(VALID_AMINO_ACIDS), default=None,
+                                        help="Static residues will have thier locations unchanged")
 
 markov_state_size = 2
 if decoy_strategy == 'markov':
@@ -62,7 +64,7 @@ if decoy_strategy == 'exchange':
 shifted_amino_acids = None
 if decoy_strategy == 'shifted reversal':
     shifted_amino_acids = set(st.multiselect("Shifted Residues", options=list(VALID_AMINO_ACIDS),
-                                             default=['K', 'R']))
+                                             default=['K', 'R']), help="These residues will be swapped with the next residue. Then the sequence will be reversed.")
 
 if st.button("Generate Decoys"):
 

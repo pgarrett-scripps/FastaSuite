@@ -25,8 +25,8 @@ with st.expander("Help"):
 fasta_file = st.file_uploader("FASTA", ".fasta")
 dta_filter_files = st.file_uploader("DTASelect-filter.txt", ".txt", accept_multiple_files=True)
 
-decoy_flag = st.text_input("Decoy Flag", "Reverse", help="The string used to identify Decoy peptides")
-contaminant_flag = st.text_input("Contaminant Flag", "contaminant", help="The string used to identify contaminant peptides")
+decoy_flag = st.text_input("Decoy Flag", "Reverse_", help="Flag used to identify Decoy peptides (if fasta contains '>DECOY_sp|XXXX|YYYY' set to 'DECOY_')")
+contaminant_flag = st.text_input("Contaminant Flag", "contaminant_", help="Flag used to identify Contaminant peptides (if fasta contains '>contaminant_sp|XXXX|YYYY' set to 'contaminant_')")
 
 if st.button("Generate"):
 

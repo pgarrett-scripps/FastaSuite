@@ -11,9 +11,9 @@ from decoy_util import VALID_AMINO_ACIDS
 from utils import map_locus_to_sequence_from_fasta
 
 fasta_file = st.file_uploader("Choose a fasta file", type=".fasta")
-enzyme_residues = st.multiselect("Enzyme Sites", list(VALID_AMINO_ACIDS), ['K', 'R'])
-min_len, max_len = st.slider("Min/Max Peptide Lengths", 0, 100, [6, 50])
-decoy_flag = st.text_input("Decoy Flag", "DECOY_")
+enzyme_residues = st.multiselect("Enzyme Sites", list(VALID_AMINO_ACIDS), ['K', 'R'], help="Residues to cleave after. For Trypsin use (K & R)")
+min_len, max_len = st.slider("Min/Max Peptide Lengths", 0, 100, [6, 50], help="Sets range of supported peptides (min <= len_of_peptide <= max)")
+decoy_flag = st.text_input("Decoy Flag", "DECOY_", help="Flag used to identify Decoy peptides (if fasta contains '>DECOY_sp|XXXX|YYYY' set to 'DECOY_')")
 
 if st.button("Run"):
     if not fasta_file:
@@ -37,10 +37,14 @@ if st.button("Run"):
             sub_sequences = re.split("|".join(enzyme_residues), sequence)
 
             peptides = []
-            for aa, sub_sequence, in zip(aas, sub_sequences):
-                peptides.append(aa + sub_sequence)
+            for i in range(len(sub_sequences)):
+                if i < len(aas):
+                    peptides.append(sub_sequences[i] + aas[i])
+                else:
+                    peptides.append(sub_sequences[i])
 
-            return [peptide for peptide in peptides if min_len <= len(peptide) <= max_len]
+            peptides = [peptide for peptide in peptides if min_len <= len(peptide) <= max_len]
+            return peptides
 
         target_peptides = [peptide for sequence in target_sequences for peptide in digest_sequence(sequence, enzyme_residues, min_len, max_len)]
         decoy_peptides = [peptide for sequence in decoy_sequences for peptide in digest_sequence(sequence, enzyme_residues, min_len, max_len)]
