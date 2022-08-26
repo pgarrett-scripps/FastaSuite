@@ -28,7 +28,8 @@ with st.expander("Help"):
     - **markov:** trains a markov chain model on target proteins and randomly generates decoys with length between min/max
     - **exchange:** exchange the provided residues with the replacement
     - **shifted reversal:** reverse the sequence, then switch the given amino acids with their predecessor 
-    
+    - **DeBruijn:** randomly shuffle amino acids while keeping repeated patterns 
+
     
     The "ideal" decoy database should statistically mimic the target database. Such a database should conserve 
     amino acid frequency, peptide lengths, peptide masses, protein lengths, repeat sequences within proteins, and 
@@ -55,6 +56,10 @@ markov_state_size = 2
 if decoy_strategy == 'markov':
     markov_state_size = st.number_input("Markov Chain Memory", min_value=2, max_value=2, value=2)
 
+kmer_size = 2
+if decoy_strategy == 'deBruijn':
+    kmer_size = st.number_input("K-mer size", min_value=2, max_value=5, value=2)
+
 aa_exchange_map = {}
 if decoy_strategy == 'exchange':
     with st.expander("Residue Map"):
@@ -64,7 +69,7 @@ if decoy_strategy == 'exchange':
 shifted_amino_acids = None
 if decoy_strategy == 'shifted reversal':
     shifted_amino_acids = set(st.multiselect("Shifted Residues", options=list(VALID_AMINO_ACIDS),
-                                             default=['K', 'R']), help="These residues will be swapped with the next residue. Then the sequence will be reversed.")
+                                             default=['K', 'R'], help="These residues will be swapped with the next residue. Then the sequence will be reversed."))
 
 if st.button("Generate Decoys"):
 
@@ -93,7 +98,7 @@ if st.button("Generate Decoys"):
                 gene_name_model = make_gene_name_markov_model(gene_names)
 
             if decoy_strategy == 'deBruijn':
-                nodes = construct_bruijn_graph(sequences, 2)
+                nodes = construct_bruijn_graph(sequences, kmer_size)
                 concatenated_sequence = "".join(sequences)
                 amino_acids_count = Counter(concatenated_sequence)
                 amino_acids_frequency = {aa: amino_acids_count[aa] / len(concatenated_sequence) for aa in amino_acids_count}
@@ -134,7 +139,7 @@ if st.button("Generate Decoys"):
                     decoy_sequence = shift_reverse_sequence(sequence, shifted_amino_acids)
 
                 elif decoy_strategy == 'deBruijn':
-                    decoy_sequence = construct_sequence(nodes, sequence, 2)
+                    decoy_sequence = construct_sequence(nodes, sequence, kmer_size)
 
                 decoy_locus_to_sequence_map[decoy_locus] = {'description':decoy_description, 'sequence':decoy_sequence}
 
