@@ -47,14 +47,16 @@ def shift_reverse_sequence(sequence, shift_amino_acids=None):
     for i in range(len(decoy_sequence)):
         aa = decoy_sequence[i]
         if aa in shift_amino_acids:
-            decoy_sequence[i] = prev_aa
+            if i > 0:
+                decoy_sequence[i-1] = decoy_sequence[i]
+                decoy_sequence[i] = prev_aa
         prev_aa = aa
     return "".join(decoy_sequence)
 
 
-def make_sequence_markov_model(sequences):
+def make_sequence_markov_model(sequences, markov_state_size):
     protein_sentences = [" ".join(list(sequence)) + "\n" for sequence in sequences]
-    return markovify.NewlineText("".join(protein_sentences))
+    return markovify.NewlineText("".join(protein_sentences), state_size=markov_state_size)
 
 
 def make_locus_name_markov_model(locus_names):
@@ -77,6 +79,66 @@ def predict_locus_name_from_markov_model(model, min_chars, max_chars):
 
 def predict_gene_name_from_markov_model(model, min_chars, max_chars):
     return model.make_sentence(min_chars=min_chars, max_chars=max_chars, test_output=False).replace(" ", "")
+
+
+def build_kmers(sequence, k):
+    kmers = []
+    n_kmers = len(sequence) - k + 1
+    for i in range(n_kmers):
+        kmer = sequence[i:i + k]
+        kmers.append(kmer)
+    return kmers
+
+
+def construct_bruijn_graph(sequences, k):
+    nodes = {}
+
+    for sequence in sequences:
+        sequence = "".join(['-'] * k) + sequence
+
+        kmers = build_kmers(sequence, k)
+        for i, kmer in enumerate(kmers):
+            if i == len(kmers) - 1:
+                break
+            next_kmer = kmers[i + 1]
+            next_letter = next_kmer[-1]
+            if kmer not in nodes:
+                nodes[kmer] = {next_kmer: next_letter}
+            else:
+                nodes[kmer][next_kmer] = next_letter
+    return nodes
+
+
+def construct_sequence(nodes, sequence, k):
+    new_sequence = []
+
+    sequence = "".join(['-'] * k) + sequence
+    kmers = build_kmers(sequence, k)
+    for i, kmer in enumerate(kmers):
+        if i == len(kmers) - 1:
+            break
+        next_kmer = kmers[i + 1]
+        next_letter = next_kmer[-1]
+
+        letter = nodes[kmer][next_kmer]
+        new_sequence.append(letter)
+
+    return "".join(new_sequence)
+
+
+def randomize_nodes(nodes, static_residues=None, amino_acids_frequency=None):
+    amino_acid_weights = [amino_acids_frequency.get(aa, 0) for aa in VALID_AMINO_ACIDS]
+    for aa in static_residues:
+        amino_acid_weights[VALID_AMINO_ACIDS.index(aa)] = 0
+
+    for key1 in nodes:
+        for key2 in nodes[key1]:
+            aa = nodes[key1][key2]
+            if aa in static_residues:
+                continue
+            nodes[key1][key2] = random.choices(VALID_AMINO_ACIDS, weights=amino_acid_weights, k=1)[0]
+
+
 
 
 
