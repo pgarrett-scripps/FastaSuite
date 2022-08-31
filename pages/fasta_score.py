@@ -10,6 +10,19 @@ from scipy import spatial
 from decoy_util import VALID_AMINO_ACIDS
 from utils import map_locus_to_sequence_from_fasta
 
+st.title("FASTA Score")
+with st.expander("Help"):
+    st.markdown("""
+        Scores a FASTA file according to decoy/target statistics.
+        The "ideal" FASTA file contains target and decoy proteins which statistically resemble each other.
+        
+        Enzyme Sites: The digestion sites. Use K,R for trypsin. 
+        
+        Min/Max Peptide Lengths: Keep only digested peptides within these bounds (bounds are inclusive)
+        
+        Decoy Flag: The flag used to represent Decoy Proteins
+    """)
+
 fasta_file = st.file_uploader("Choose a fasta file", type=".fasta")
 enzyme_residues = st.multiselect("Enzyme Sites", list(VALID_AMINO_ACIDS), ['K', 'R'], help="Residues to cleave after. For Trypsin use (K & R)")
 min_len, max_len = st.slider("Min/Max Peptide Lengths", 0, 100, [6, 50], help="Sets range of supported peptides (min <= len_of_peptide <= max)")
@@ -118,11 +131,6 @@ if st.button("Run"):
                 df.set_index('Amino Acid', inplace=True)
 
                 st.table(df.round(5))
-
-
-
-
-
 
         display_fasta_stats(target_sequences, target_peptides, decoy_sequences, decoy_peptides)
 

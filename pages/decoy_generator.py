@@ -19,6 +19,7 @@ with st.expander("Help"):
     **FASTA File**: FASTA file containing target proteins
     
     **Decoy Flag:** The decoy flag to prepend locus names ("Reverse_" -> ">Reverse_sp|XXXX|YYYY")
+    Set to "Reverse_" for IP2
     
     **Decoy Strategies**
     

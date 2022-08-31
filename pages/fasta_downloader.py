@@ -2,12 +2,20 @@ import streamlit as st
 import requests
 
 st.subheader("Download FASTA file")
-st.write("FASTA files will be downloaded directly from uniprot")
+with st.expander("Help"):
+     st.markdown("""
+     FASTA files will be downloaded directly from uniprot. 
+     
+     Organisms: The name of the organisms you would like to include in the in the Fasta file. 
+     Selecting multiple will concatenate all proteins into a single FASTA file.
+     
+     Reviewed: If selected then the FASTA file will only contain reviewed proteins.
+     """)
 
 organims_to_tax_id = {
-     'human':9606,
-     'ecoli':83333,
-     'celegans':6239
+     'Human':9606,
+     'E. coli':83333,
+     'C. elegans':6239
 }
 
 def fasta_url_download_link(tax_id, is_reviewed):
