@@ -1,15 +1,19 @@
+import re
 import streamlit as st
 import requests
+from datetime import date
 
-st.subheader("Download FASTA file")
+st.title("Download FASTA")
 with st.expander("Help"):
      st.markdown("""
      FASTA files will be downloaded directly from uniprot. 
      
-     Organisms: The name of the organisms you would like to include in the in the Fasta file. 
+     **Input:**
+     
+     **Organisms**: The name of the organisms you would like to include in the in the Fasta file. 
      Selecting multiple will concatenate all proteins into a single FASTA file.
      
-     Reviewed: If selected then the FASTA file will only contain reviewed proteins.
+     **Reviewed**: If selected then the FASTA file will only contain reviewed proteins.
      """)
 
 organims_to_tax_id = {
@@ -40,10 +44,14 @@ if st.button("Get FASTA"):
 
           combied_response = b'\n'.join(responses)
 
+          today = date.today()
+          mdy = today.strftime("%m_%d_%Y")
+          fasta_file_name = '_'.join([re.sub(r'[^a-zA-Z]', '', option).lower() for option in options])
+          fasta_file_name = f'{fasta_file_name}{"_reviewed" if is_reviewed else ""}_{mdy}.fasta'
           st.download_button(
-               label="Download Fasta",
+               label=f"Download {fasta_file_name}",
                data=combied_response,
-               file_name=f'{"_".join(options)}_reviewed_{str(is_reviewed).lower()}.fasta',
+               file_name=fasta_file_name,
                mime='text/csv',
           )
 

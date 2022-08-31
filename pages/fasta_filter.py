@@ -5,7 +5,7 @@ from senpy.dtaSelectFilter.parser2 import read_file
 
 from utils import map_locus_to_sequence_from_fasta, fasta_from_locus_to_sequence_map
 
-st.title("FASTA Filter")
+st.title("Filter FASTA")
 with st.expander("Help"):
     st.markdown("""
     
@@ -25,8 +25,11 @@ with st.expander("Help"):
 fasta_file = st.file_uploader("FASTA", ".fasta")
 dta_filter_files = st.file_uploader("DTASelect-filter.txt", ".txt", accept_multiple_files=True)
 
-decoy_flag = st.text_input("Decoy Flag", "Reverse_", help="Flag used to identify Decoy peptides (if fasta contains '>DECOY_sp|XXXX|YYYY' set to 'DECOY_')")
-contaminant_flag = st.text_input("Contaminant Flag", "contaminant_", help="Flag used to identify Contaminant peptides (if fasta contains '>contaminant_sp|XXXX|YYYY' set to 'contaminant_')")
+decoy_flag = st.text_input("Decoy Flag", "Reverse_", help="Flag used to identify Decoy peptides (if fasta contains"
+                                                          " '>DECOY_sp|XXXX|YYYY' set to 'DECOY_')")
+contaminant_flag = st.text_input("Contaminant Flag", "contaminant_",
+                                 help="Flag used to identify Contaminant peptides (if fasta contains "
+                                      "'>contaminant_sp|XXXX|YYYY' set to 'contaminant_')")
 
 if st.button("Generate"):
 
@@ -54,4 +57,6 @@ if st.button("Generate"):
         dta_filter_locus_to_sequence_map = {locus: locus_to_sequence_map[locus] for locus in protein_locuses}
 
         new_fasta_lines = fasta_from_locus_to_sequence_map(dta_filter_locus_to_sequence_map)
-        st.download_button("Download FASTA", "".join(new_fasta_lines), file_name=f"{Path(fasta_file.name).stem}_filter.fasta")
+        st.download_button("Download FASTA",
+                           "".join(new_fasta_lines),
+                           file_name=f"{Path(fasta_file.name).stem}_filter.fasta")

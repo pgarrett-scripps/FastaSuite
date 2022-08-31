@@ -10,17 +10,19 @@ from scipy import spatial
 from decoy_util import VALID_AMINO_ACIDS
 from utils import map_locus_to_sequence_from_fasta
 
-st.title("FASTA Score")
+st.title("Score FASTA")
 with st.expander("Help"):
     st.markdown("""
         Scores a FASTA file according to decoy/target statistics.
         The "ideal" FASTA file contains target and decoy proteins which statistically resemble each other.
         
-        Enzyme Sites: The digestion sites. Use K,R for trypsin. 
+        **Input:**
         
-        Min/Max Peptide Lengths: Keep only digested peptides within these bounds (bounds are inclusive)
+        **Enzyme Sites**: The digestion sites. Use K,R for trypsin. 
         
-        Decoy Flag: The flag used to represent Decoy Proteins
+        **Min/Max Peptide Lengths**: Keep only digested peptides within these bounds (bounds are inclusive)
+        
+        **Decoy Flag**: The flag used to represent Decoy Proteins
     """)
 
 fasta_file = st.file_uploader("Choose a fasta file", type=".fasta")
