@@ -18,4 +18,12 @@ def fasta_from_locus_to_sequence_map(locus_to_sequence_map):
     for locus in locus_to_sequence_map:
         lines.append(f'>{locus} {locus_to_sequence_map[locus]["description"]}\n')
         lines.append(f'{locus_to_sequence_map[locus]["sequence"]}\n')
-    return lines
+    return ''.join(lines)
+
+
+def get_lines_from_uploaded_file(file):
+    return file.getvalue().decode("utf-8").split("\n")
+
+
+def fasta_url_download_link(tax_id, is_reviewed):
+    return f'https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28taxonomy_id%3A{tax_id}%29%20AND%20%28reviewed%3A{str(is_reviewed).lower()}%29'

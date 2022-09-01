@@ -3,7 +3,8 @@ from pathlib import Path
 
 import streamlit as st
 
-from decoy_util import VALID_AMINO_ACIDS, reverse_sequence, static_shuffle_sequence, shuffle_sequence, \
+from constants import VALID_AMINO_ACIDS
+from decoy_util import reverse_sequence, static_shuffle_sequence, shuffle_sequence, \
     exchange_sequence, shift_reverse_sequence, make_sequence_markov_model, make_locus_name_markov_model, \
     make_gene_name_markov_model, predict_sequence_from_markov_model, predict_locus_name_from_markov_model, \
     predict_gene_name_from_markov_model, construct_bruijn_graph, randomize_nodes, construct_sequence

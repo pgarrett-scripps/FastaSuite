@@ -3,31 +3,17 @@ import streamlit as st
 import requests
 from datetime import date
 
+from constants import FASTA_DOWNLOADER_HELP_MESSAGE, ORGANISM_TO_TAXONOMY_ID
+from utils import fasta_url_download_link
+
 st.title("Download FASTA")
 with st.expander("Help"):
-     st.markdown("""
-     FASTA files will be downloaded directly from uniprot. 
-     
-     **Input:**
-     
-     **Organisms**: The name of the organisms you would like to include in the in the Fasta file. 
-     Selecting multiple will concatenate all proteins into a single FASTA file.
-     
-     **Reviewed**: If selected then the FASTA file will only contain reviewed proteins.
-     """)
+     st.markdown(FASTA_DOWNLOADER_HELP_MESSAGE)
 
-organims_to_tax_id = {
-     'Human':9606,
-     'E. coli':83333,
-     'C. elegans':6239
-}
-
-def fasta_url_download_link(tax_id, is_reviewed):
-     return f'https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28taxonomy_id%3A{tax_id}%29%20AND%20%28reviewed%3A{str(is_reviewed).lower()}%29'
 
 options = st.multiselect(
-     'Organisms',
-     list(organims_to_tax_id.keys())
+     label='Organisms',
+     options=list(ORGANISM_TO_TAXONOMY_ID)
 )
 
 is_reviewed = st.checkbox("reviewed",value=True)
@@ -38,7 +24,7 @@ if st.button("Get FASTA"):
 
           responses = []
           for option in options:
-               url = fasta_url_download_link(organims_to_tax_id[option], is_reviewed)
+               url = fasta_url_download_link(ORGANISM_TO_TAXONOMY_ID[option], is_reviewed)
                response = requests.get(url)
                responses.append(response.content)
 

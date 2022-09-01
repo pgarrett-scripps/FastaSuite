@@ -1,10 +1,6 @@
 import random
 import re
-
 import markovify
-
-VALID_AMINO_ACIDS = 'ARNDCEQGHILKMFPSTWYVUXZBJO'
-
 
 def reverse_sequence(sequence):
     return sequence[::-1]

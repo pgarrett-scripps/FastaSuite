@@ -7,28 +7,18 @@ import streamlit as st
 from matplotlib import pyplot as plt
 from scipy import spatial
 
-from decoy_util import VALID_AMINO_ACIDS
+from constants import VALID_AMINO_ACIDS, FASTA_SCORE_HELP_MESSAGE, DECOY_FLAG_HELP_MESSAGE, \
+    MIN_MAX_PEPTIDE_LENGTH_HELP_MESSAGE, ENZYME_HELP_MESSAGE
 from utils import map_locus_to_sequence_from_fasta
 
 st.title("Score FASTA")
 with st.expander("Help"):
-    st.markdown("""
-        Scores a FASTA file according to decoy/target statistics.
-        The "ideal" FASTA file contains target and decoy proteins which statistically resemble each other.
-        
-        **Input:**
-        
-        **Enzyme Sites**: The digestion sites. Use K,R for trypsin. 
-        
-        **Min/Max Peptide Lengths**: Keep only digested peptides within these bounds (bounds are inclusive)
-        
-        **Decoy Flag**: The flag used to represent Decoy Proteins
-    """)
+    st.markdown(FASTA_SCORE_HELP_MESSAGE)
 
-fasta_file = st.file_uploader("Choose a fasta file", type=".fasta")
-enzyme_residues = st.multiselect("Enzyme Sites", list(VALID_AMINO_ACIDS), ['K', 'R'], help="Residues to cleave after. For Trypsin use (K & R)")
-min_len, max_len = st.slider("Min/Max Peptide Lengths", 0, 100, [6, 50], help="Sets range of supported peptides (min <= len_of_peptide <= max)")
-decoy_flag = st.text_input("Decoy Flag", "DECOY_", help="Flag used to identify Decoy peptides (if fasta contains '>DECOY_sp|XXXX|YYYY' set to 'DECOY_')")
+fasta_file = st.file_uploader(label="Choose a fasta file", type=".fasta")
+enzyme_residues = st.multiselect("Enzyme Sites", list(VALID_AMINO_ACIDS), ['K', 'R'], help=ENZYME_HELP_MESSAGE)
+min_len, max_len = st.slider("Min/Max Peptide Lengths", 0, 100, [6, 50], help=MIN_MAX_PEPTIDE_LENGTH_HELP_MESSAGE)
+decoy_flag = st.text_input("Decoy Flag", "DECOY_", help=DECOY_FLAG_HELP_MESSAGE)
 
 if st.button("Run"):
     if not fasta_file:
@@ -46,17 +36,27 @@ if st.button("Run"):
                 target_sequences.append(locus_to_sequence_map[locus]['sequence'])
 
         def digest_sequence(sequence, enzyme_residues, min_len, max_len):
-            aa_to_indexes = {aa: [m.start() for m in re.finditer(aa, sequence)] for aa in enzyme_residues}
-            aa_indexes = [(index, aa) for aa in aa_to_indexes for index in aa_to_indexes[aa]]
-            aas = [aa for i, aa in sorted(aa_indexes, key=lambda pair: pair[0])]
-            sub_sequences = re.split("|".join(enzyme_residues), sequence)
+            if enzyme_residues:
+                aa_to_indexes = {aa: [m.start() for m in re.finditer(aa, sequence)] for aa in enzyme_residues}
+                aa_indexes = [(index, aa) for aa in aa_to_indexes for index in aa_to_indexes[aa]]
+                aas = [aa for i, aa in sorted(aa_indexes, key=lambda pair: pair[0])]
+                sub_sequences = re.split("|".join(enzyme_residues), sequence)
 
-            peptides = []
-            for i in range(len(sub_sequences)):
-                if i < len(aas):
-                    peptides.append(sub_sequences[i] + aas[i])
-                else:
-                    peptides.append(sub_sequences[i])
+                peptides = []
+                for i in range(len(sub_sequences)):
+                    if i < len(aas):
+                        peptides.append(sub_sequences[i] + aas[i])
+                    else:
+                        peptides.append(sub_sequences[i])
+            else:
+                peptides = []
+                for i in range(len(sequence)):
+                    for j in range(i+1, len(sequence)):
+                        if j - i < min_len:
+                            continue
+                        if j - i > max_len:
+                            break
+                        peptides.append(sequence[i:j])
 
             peptides = [peptide for peptide in peptides if min_len <= len(peptide) <= max_len]
             return peptides
