@@ -32,7 +32,7 @@ if st.button("Filter"):
         fasta_lines = get_lines_from_uploaded_file(fasta_file)
         locus_to_sequence_map = map_locus_to_sequence_from_fasta(fasta_lines)
 
-        # Parse DTASelect-filter
+        # Parse DTASelect-filter and get a set of all protein locuses
         protein_locuses = set()
         for dta_filter_file in dta_filter_files:
             dta_filter_lines = get_lines_from_uploaded_file(dta_filter_file)
@@ -40,10 +40,10 @@ if st.button("Filter"):
             for dta_filter_result in dta_filter_results:
                 protein_locuses.update({protein_line.locus for protein_line in dta_filter_result.proteins})
 
-        # Remove locuses matching these flags
-        if decoy_flag:
+        # Remove locuses matching these decoya nd contaminant flag.
+        if decoy_flag: # *Note python interprets an empty string as falsy
             protein_locuses = [locus for locus in protein_locuses if decoy_flag not in locus]
-        if contaminant_flag:
+        if contaminant_flag: # *Note python interprets an empty string as falsy
             protein_locuses = [locus for locus in protein_locuses if contaminant_flag not in locus]
 
         dta_filter_locus_to_sequence_map = {locus: locus_to_sequence_map[locus] for locus in protein_locuses}

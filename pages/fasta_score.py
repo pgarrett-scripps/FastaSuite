@@ -16,9 +16,11 @@ with st.expander("Help"):
     st.markdown(FASTA_SCORE_HELP_MESSAGE)
 
 fasta_file = st.file_uploader(label="Choose a fasta file", type=".fasta")
-enzyme_residues = st.multiselect("Enzyme Sites", list(VALID_AMINO_ACIDS), ['K', 'R'], help=ENZYME_HELP_MESSAGE)
-min_len, max_len = st.slider("Min/Max Peptide Lengths", 0, 100, [6, 50], help=MIN_MAX_PEPTIDE_LENGTH_HELP_MESSAGE)
-decoy_flag = st.text_input("Decoy Flag", "DECOY_", help=DECOY_FLAG_HELP_MESSAGE)
+enzyme_residues = st.multiselect(label="Enzyme Sites", options=list(VALID_AMINO_ACIDS), default=['K', 'R'],
+                                 help=ENZYME_HELP_MESSAGE)
+min_len, max_len = st.slider(label="Min/Max Peptide Lengths", min_value=0, max_value=100, value=[6, 50],
+                             help=MIN_MAX_PEPTIDE_LENGTH_HELP_MESSAGE)
+decoy_flag = st.text_input(label="Decoy Flag", value="DECOY_", help=DECOY_FLAG_HELP_MESSAGE)
 
 if st.button("Run"):
     if not fasta_file:
@@ -61,9 +63,10 @@ if st.button("Run"):
             peptides = [peptide for peptide in peptides if min_len <= len(peptide) <= max_len]
             return peptides
 
-        target_peptides = [peptide for sequence in target_sequences for peptide in digest_sequence(sequence, enzyme_residues, min_len, max_len)]
-        decoy_peptides = [peptide for sequence in decoy_sequences for peptide in digest_sequence(sequence, enzyme_residues, min_len, max_len)]
-
+        target_peptides = [peptide for sequence in target_sequences for peptide in
+                           digest_sequence(sequence, enzyme_residues, min_len, max_len)]
+        decoy_peptides = [peptide for sequence in decoy_sequences for peptide in
+                          digest_sequence(sequence, enzyme_residues, min_len, max_len)]
 
         def display_fasta_stats(target_proteins, target_peptides, decoy_proteins, decoy_peptides):
             st.subheader("Target")

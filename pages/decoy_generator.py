@@ -3,7 +3,9 @@ from pathlib import Path
 
 import streamlit as st
 
-from constants import VALID_AMINO_ACIDS
+from constants import VALID_AMINO_ACIDS, DECOY_GENERATOR_HELP_MESSAGE, DECOY_FLAG_HELP_MESSAGE, \
+    RANDOM_SEED_HELP_MESSAGE, STATIC_AMINO_ACID_HELP_MESSAGE, MARKOV_STATE_SIZE_HELP_MESSAGE, KMER_SIZE_HELP_MESSAGE, \
+    SHIFTED_AMINO_ACID_HELP_MESSAGE
 from decoy_util import reverse_sequence, static_shuffle_sequence, shuffle_sequence, \
     exchange_sequence, shift_reverse_sequence, make_sequence_markov_model, make_locus_name_markov_model, \
     make_gene_name_markov_model, predict_sequence_from_markov_model, predict_locus_name_from_markov_model, \
@@ -12,67 +14,33 @@ from utils import map_locus_to_sequence_from_fasta, fasta_from_locus_to_sequence
 
 st.title("Decoy Generator")
 with st.expander("Help"):
-    st.markdown("""
+    st.markdown(DECOY_GENERATOR_HELP_MESSAGE)
 
-    Generate Decoy Proteins in a FASTA file
+fasta_file = st.file_uploader(label="Upload FASTA", type=".fasta")
 
-    **Input**
-
-    **FASTA File**: FASTA file containing proteins. All proteins in this file will be used to generate a decoy 
-    variant so there should be no decoy sequences present
-    
-    **Decoy Flag:** The decoy flag to prepend locus names ("Reverse_" -> ">Reverse_sp|XXXX|YYYY")
-    Set to "Reverse_" for IP2
-    
-    **Decoy Strategies**
-    
-    - **reverse:** reverse the sequence
-    - **shuffle:** randomly shuffle the sequence
-    - **shuffle static:** randomly shuffle residues between given static residues
-    - **markov:** trains a markov chain model on target proteins and uses this model to predict decoy proteins
-    - **exchange:** exchange the provided residues with the replacement
-    - **shifted reversal:** reverse the sequence, then switch the given amino acids with their predecessor 
-    - **DeBruijn:** randomly shuffle amino acids while keeping repeated patterns 
-    - **DeBruijn static:** randomly shuffle amino acids while keeping repeated patterns and static residues
-
-
-    
-    The "ideal" decoy database should statistically mimic the target database. Such a database should conserve 
-    amino acid frequency, peptide lengths, peptide masses, protein lengths, repeat sequences within proteins, and 
-    repeat sequences between proteins.
-
-    """)
-
-fasta_file = st.file_uploader("Upload FASTA", type=".fasta")
-
-decoy_flag = st.text_input("Decoy Flag (set to 'Reverse_' for IP2)", "DECOY_",
-                           help="The flag used to identify Decoy peptides: 'DECOY_' "
-                                "will result in '>DECOY_sp|XXXX|YYYY'")
-decoy_strategy = st.radio("Decoy Strategy",
-                          ('reverse', 'shuffle', 'markov', 'exchange', 'shifted reversal', 'deBruijn'), index=0)
+decoy_flag = st.text_input(label="Decoy Flag (set to 'Reverse_' for IP2)", default="DECOY_",
+                           help=DECOY_FLAG_HELP_MESSAGE)
+decoy_strategy = st.radio(label = "Decoy Strategy",
+                          options=('reverse', 'shuffle', 'markov', 'exchange', 'shifted reversal', 'deBruijn'),
+                          index=0)
 
 random_seed = None
 if decoy_strategy in {'shuffle', 'markov', 'deBruijn'}:
-    random_seed = st.number_input("Seed", value=123,
-                                  help="Used to initialize a pseudorandom number generator. Keeping the same "
-                                       "number will allow for reproducible decoy generation.")
+    random_seed = st.number_input("Seed", value=123, help=RANDOM_SEED_HELP_MESSAGE)
 
 static_amino_acids = None
 if decoy_strategy in {'shuffle', 'deBruijn'}:
     static_amino_acids = st.multiselect(label='Static Residues', options=list(VALID_AMINO_ACIDS), default=None,
-                                        help="Static Residues will have the same sequential location in decoy and"
-                                             " target proteins")
+                                        help=STATIC_AMINO_ACID_HELP_MESSAGE)
 markov_state_size = None
 if decoy_strategy == 'markov':
     markov_state_size = st.number_input("Markov Chain Memory", min_value=2, max_value=2, value=2,
-                                        help='The memory of the markov chain: how many previous residues to consider '
-                                             'when predicting next amino acid')
+                                        help=MARKOV_STATE_SIZE_HELP_MESSAGE)
 
 kmer_size = None
 if decoy_strategy == 'deBruijn':
     kmer_size = st.number_input("K-mer size", min_value=2, max_value=5, value=2,
-                                help='The number of residues needed to identify repeat sequences. '
-                                     'The first N elements in a repeated sequence will lost.')
+                                help=KMER_SIZE_HELP_MESSAGE)
 aa_exchange_map = {}
 if decoy_strategy == 'exchange':
     for aa in VALID_AMINO_ACIDS:
@@ -82,9 +50,7 @@ if decoy_strategy == 'exchange':
 shifted_amino_acids = None
 if decoy_strategy == 'shifted reversal':
     shifted_amino_acids = set(st.multiselect("Shifted Residues", options=list(VALID_AMINO_ACIDS),
-                                             default=['K', 'R'],
-                                             help="These residues will be swapped with the next residue. "
-                                                  "Then the sequence will be reversed."))
+                                             default=['K', 'R'], help=SHIFTED_AMINO_ACID_HELP_MESSAGE))
 
 if st.button("Generate Decoys"):
 

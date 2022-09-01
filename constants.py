@@ -41,6 +41,7 @@ ORGANISM_TO_TAXONOMY_ID = {
      'C. elegans': 6239
 }
 
+# FASTA SCORE
 FASTA_SCORE_HELP_MESSAGE = """
         Scores a FASTA file according to decoy/target statistics.
         The "ideal" FASTA file contains target and decoy proteins which statistically resemble each other.
@@ -55,3 +56,38 @@ FASTA_SCORE_HELP_MESSAGE = """
     """
 ENZYME_HELP_MESSAGE = "Residues to cleave after. For Trypsin use (K & R), for nonspecific leave blank"
 MIN_MAX_PEPTIDE_LENGTH_HELP_MESSAGE = "Sets range of supported peptides (min <= len_of_peptide <= max)"
+
+# FASTA DECOY
+DECOY_GENERATOR_HELP_MESSAGE = """
+    Generate Decoy Proteins in a FASTA file
+
+    **Input**
+
+    **FASTA File**: FASTA file containing proteins. All proteins in this file will be used to generate a decoy 
+    variant so there should be no decoy sequences present
+    
+    **Decoy Flag:** The decoy flag to prepend locus names ("Reverse_" -> ">Reverse_sp|XXXX|YYYY")
+    Set to "Reverse_" for IP2
+    
+    **Decoy Strategies**
+    
+    - **reverse:** reverse the protein sequence
+    - **shuffle:** randomly shuffle the protein sequence
+    - **shuffle static:** randomly shuffle the residues between given static residues
+    - **markov:** trains a markov chain model on target proteins and uses this model to predict decoy proteins (Think autocompletion)
+    - **exchange:** exchange residues with their given replacement
+    - **shifted reversal:** reverse the sequence, then switch the given amino acids with their predecessor 
+    - **DeBruijn:** randomly shuffle amino acids while keeping repeated patterns (similar to shuffle but repeat sequences are preserved)
+    - **DeBruijn static:** randomly shuffle amino acids while keeping repeated patterns and static residues (similar to static shuffle but repeat sequences are preserved)
+    
+    
+    The "ideal" decoy database should statistically mimic the target database. Such a database should conserve 
+    amino acid frequency, peptide lengths, peptide masses, protein lengths, repeat sequences within proteins, and 
+    repeat sequences between proteins.
+    """
+
+RANDOM_SEED_HELP_MESSAGE = "Used to initialize a pseudorandom number generator. Keeping the same number will allow for reproducible decoy generation."
+STATIC_AMINO_ACID_HELP_MESSAGE = "Static Residues will have the same sequential location in decoy and target proteins"
+MARKOV_STATE_SIZE_HELP_MESSAGE = 'The memory of the markov chain: how many previous residues to consider when predicting next amino acid'
+KMER_SIZE_HELP_MESSAGE= 'The number of residues needed to identify repeat sequences. The first N elements in a repeated sequence will lost.'
+SHIFTED_AMINO_ACID_HELP_MESSAGE = "These residues will be swapped with the next residue. Then the sequence will be reversed."

@@ -27,3 +27,5 @@ def get_lines_from_uploaded_file(file):
 
 def fasta_url_download_link(tax_id, is_reviewed):
     return f'https://rest.uniprot.org/uniprotkb/stream?format=fasta&query=%28taxonomy_id%3A{tax_id}%29%20AND%20%28reviewed%3A{str(is_reviewed).lower()}%29'
+
+
