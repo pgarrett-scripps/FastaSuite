@@ -18,7 +18,7 @@ with st.expander("Help"):
 
 fasta_file = st.file_uploader(label="Upload FASTA", type=".fasta")
 
-decoy_flag = st.text_input(label="Decoy Flag (set to 'Reverse_' for IP2)", default="DECOY_",
+decoy_flag = st.text_input(label="Decoy Flag (set to 'Reverse_' for IP2)", value="DECOY_",
                            help=DECOY_FLAG_HELP_MESSAGE)
 decoy_strategy = st.radio(label = "Decoy Strategy",
                           options=('reverse', 'shuffle', 'markov', 'exchange', 'shifted reversal', 'deBruijn'),
@@ -159,5 +159,3 @@ if st.button("Generate Decoys"):
             st.download_button(f"Download {fasta_file_name}",
                                "".join(new_fasta_lines),
                                file_name=fasta_file_name)
-
-            st.balloons()
