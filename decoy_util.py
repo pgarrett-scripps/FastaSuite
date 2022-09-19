@@ -2,6 +2,9 @@ import random
 import re
 import markovify
 
+from constants import VALID_AMINO_ACIDS
+
+
 def reverse_sequence(sequence):
     return sequence[::-1]
 
@@ -34,9 +37,8 @@ def exchange_sequence(sequence, amino_acid_exchange_map=None):
 
 
 def shift_reverse_sequence(sequence, shift_amino_acids=None):
-
     if shift_amino_acids is None or len(shift_amino_acids) == 0:
-       return sequence
+        return sequence
 
     decoy_sequence = list(reverse_sequence(sequence))
     prev_aa = decoy_sequence[-1]
@@ -44,7 +46,7 @@ def shift_reverse_sequence(sequence, shift_amino_acids=None):
         aa = decoy_sequence[i]
         if aa in shift_amino_acids:
             if i > 0:
-                decoy_sequence[i-1] = decoy_sequence[i]
+                decoy_sequence[i - 1] = decoy_sequence[i]
                 decoy_sequence[i] = prev_aa
         prev_aa = aa
     return "".join(decoy_sequence)
@@ -56,7 +58,7 @@ def make_sequence_markov_model(sequences, markov_state_size):
 
 
 def make_locus_name_markov_model(locus_names):
-    locus_name_sentences = [" ".join(list(locus_name))+"\n" for locus_name in locus_names]
+    locus_name_sentences = [" ".join(list(locus_name)) + "\n" for locus_name in locus_names]
     return markovify.NewlineText("".join(locus_name_sentences))
 
 
@@ -114,7 +116,6 @@ def construct_sequence(nodes, sequence, k):
         if i == len(kmers) - 1:
             break
         next_kmer = kmers[i + 1]
-        next_letter = next_kmer[-1]
 
         letter = nodes[kmer][next_kmer]
         new_sequence.append(letter)
@@ -133,9 +134,3 @@ def randomize_nodes(nodes, static_residues=None, amino_acids_frequency=None):
             if aa in static_residues:
                 continue
             nodes[key1][key2] = random.choices(VALID_AMINO_ACIDS, weights=amino_acid_weights, k=1)[0]
-
-
-
-
-
-

@@ -20,7 +20,7 @@ fasta_file = st.file_uploader(label="Upload FASTA", type=".fasta")
 
 decoy_flag = st.text_input(label="Decoy Flag (set to 'Reverse_' for IP2)", value="DECOY_",
                            help=DECOY_FLAG_HELP_MESSAGE)
-decoy_strategy = st.radio(label = "Decoy Strategy",
+decoy_strategy = st.radio(label="Decoy Strategy",
                           options=('reverse', 'shuffle', 'markov', 'exchange', 'shifted reversal', 'deBruijn'),
                           index=0)
 
@@ -106,10 +106,10 @@ if st.button("Generate Decoys"):
                     gene_name = predict_gene_name_from_markov_model(gene_name_model, 2, 10)
 
                     if locus_name is None:
-                        locus_name = "XXXX"
+                        locus_name = "XXX"
 
                     if gene_name is None:
-                        gene_name = "YYYY_ORG"
+                        gene_name = "YYY_ORG"
 
                     decoy_description = "Made up Protein"
                     decoy_locus = f"{decoy_flag}|{locus_name}|{gene_name}"
@@ -155,7 +155,8 @@ if st.button("Generate Decoys"):
 
             param_tag = f'{static_tag}{shifted_tag}{exchange_tag}{markov_memory_tag}{random_seed_tag}{kmer_size_tag}'
             new_fasta_lines = fasta_from_locus_to_sequence_map({**locus_to_sequence_map, **decoy_locus_to_sequence_map})
-            fasta_file_name = f"{Path(fasta_file.name).stem}_{decoy_strategy.replace(' ', '_')}{param_tag}.fasta".lower()
+            fasta_file_name = f"{Path(fasta_file.name).stem}_{decoy_strategy.replace(' ', '_')}" \
+                              f"{param_tag}.fasta".lower()
             st.download_button(f"Download {fasta_file_name}",
                                "".join(new_fasta_lines),
                                file_name=fasta_file_name)

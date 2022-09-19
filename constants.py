@@ -24,7 +24,7 @@ DECOY_FLAG_HELP_MESSAGE = "Flag used to identify Decoy peptides (if fasta contai
 CONTAMINANT_FLAG_HELP_MESSAGE = "Flag used to identify Contaminant peptides (if fasta contains '>contaminant_sp|XXXX|YYYY' set to 'contaminant_')"
 
 # FASTA DOWNLOADER
-FASTA_DOWNLOADER_HELP_MESSAGE= """
+FASTA_DOWNLOADER_HELP_MESSAGE = """
      FASTA files will be downloaded directly from uniprot. 
 
      **Input:**
@@ -36,9 +36,9 @@ FASTA_DOWNLOADER_HELP_MESSAGE= """
      """
 
 ORGANISM_TO_TAXONOMY_ID = {
-     'Human': 9606,
-     'E. coli': 83333,
-     'C. elegans': 6239
+    'Human': 9606,
+    'E. coli': 83333,
+    'C. elegans': 6239
 }
 
 # FASTA SCORE
@@ -89,5 +89,5 @@ DECOY_GENERATOR_HELP_MESSAGE = """
 RANDOM_SEED_HELP_MESSAGE = "Used to initialize a pseudorandom number generator. Keeping the same number will allow for reproducible decoy generation."
 STATIC_AMINO_ACID_HELP_MESSAGE = "Static Residues will have the same sequential location in decoy and target proteins"
 MARKOV_STATE_SIZE_HELP_MESSAGE = 'The memory of the markov chain: how many previous residues to consider when predicting next amino acid'
-KMER_SIZE_HELP_MESSAGE= 'The number of residues needed to identify repeat sequences. The first N elements in a repeated sequence will lost.'
+KMER_SIZE_HELP_MESSAGE = 'The number of residues needed to identify repeat sequences. The first N elements in a repeated sequence will lost.'
 SHIFTED_AMINO_ACID_HELP_MESSAGE = "These residues will be swapped with the next residue. Then the sequence will be reversed."
