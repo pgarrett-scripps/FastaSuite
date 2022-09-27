@@ -66,7 +66,11 @@ if st.button("Generate Decoys"):
             locus_to_sequence_map = map_locus_to_sequence_from_fasta(fasta_lines)
             lengths = [len(locus_to_sequence_map[locus]['sequence']) for locus in locus_to_sequence_map]
             min_len, max_len = min(lengths), max(lengths)
-            org_name = list(locus_to_sequence_map.keys())[0].split("|")[2].split("_")[1]
+
+            try:
+                org_name = list(locus_to_sequence_map.keys())[0].split("|")[2].split("_")[1]
+            except IndexError:
+                org_name = 'NA'
             sequences = [locus_to_sequence_map[locus]['sequence'] for locus in locus_to_sequence_map]
 
             if decoy_strategy == 'markov':
