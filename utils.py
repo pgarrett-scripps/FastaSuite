@@ -1,9 +1,33 @@
+import os
 import re
 from collections import Counter
+from contextlib import contextmanager
+from pathlib import Path
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
 import streamlit as st
+
+
+@contextmanager
+def write_temp_file(file):
+    fp = Path(str(uuid4()))
+    fp.write_bytes(file.getvalue())
+    try:
+        yield fp
+    finally:
+        os.remove(fp)
+
+
+@contextmanager
+def make_temp_file():
+    fp = Path(str(uuid4()))
+    fp.open('a').close()
+    try:
+        yield fp
+    finally:
+        os.remove(fp)
 
 
 def map_locus_to_sequence_from_fasta(fasta_lines):

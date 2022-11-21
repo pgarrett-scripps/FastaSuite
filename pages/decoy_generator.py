@@ -1,7 +1,10 @@
+import copy
 from collections import Counter
 from pathlib import Path
 
+from Bio.Seq import Seq
 import streamlit as st
+from Bio import SeqIO
 
 from constants import VALID_AMINO_ACIDS, DECOY_GENERATOR_HELP_MESSAGE, DECOY_FLAG_HELP_MESSAGE, \
     RANDOM_SEED_HELP_MESSAGE, STATIC_AMINO_ACID_HELP_MESSAGE, MARKOV_STATE_SIZE_HELP_MESSAGE, KMER_SIZE_HELP_MESSAGE, \
@@ -10,7 +13,7 @@ from decoy_util import reverse_sequence, static_shuffle_sequence, shuffle_sequen
     exchange_sequence, shift_reverse_sequence, make_sequence_markov_model, make_locus_name_markov_model, \
     make_gene_name_markov_model, predict_sequence_from_markov_model, predict_locus_name_from_markov_model, \
     predict_gene_name_from_markov_model, construct_bruijn_graph, randomize_nodes, construct_sequence
-from utils import map_locus_to_sequence_from_fasta, fasta_from_locus_to_sequence_map
+from utils import map_locus_to_sequence_from_fasta, fasta_from_locus_to_sequence_map, write_temp_file, make_temp_file
 
 st.title("Decoy Generator")
 with st.expander("Help"):
@@ -56,120 +59,116 @@ if st.button("Generate Decoys"):
 
     if not fasta_file:
         st.warning('Upload a FASTA file!')
+        st.stop()
 
-    if fasta_file is not None:
+    file_type = None
+    if fasta_file.name.endswith('.fasta'):
+        file_type = 'fasta'
 
-        with st.spinner("Generating decoys..."):
+    elif fasta_file.name.endswith('.xml'):
+        file_type = 'uniprot-xml'
 
-            fasta_lines = fasta_file.getvalue().decode("utf-8").split("\n")
+    with write_temp_file(fasta_file) as tmp_file:
+        with open(tmp_file) as handle:
+            records = list(SeqIO.parse(handle, file_type))
 
-            locus_to_sequence_map = map_locus_to_sequence_from_fasta(fasta_lines)
-            lengths = [len(locus_to_sequence_map[locus]['sequence']) for locus in locus_to_sequence_map]
-            min_len, max_len = min(lengths), max(lengths)
+    with st.spinner("Generating decoys..."):
 
-            try:
-                org_name = list(locus_to_sequence_map.keys())[0].split("|")[2].split("_")[1]
-            except IndexError:
-                org_name = 'NA'
-            sequences = [locus_to_sequence_map[locus]['sequence'] for locus in locus_to_sequence_map]
+        fasta_lines = fasta_file.getvalue().decode("utf-8").split("\n")
 
-            if decoy_strategy == 'markov':
-                sequence_model = make_sequence_markov_model(sequences, markov_state_size)
+        sequences = [str(record.seq) for record in records]
+        lengths = [len(sequence) for sequence in sequences]
+        min_len, max_len = min(lengths), max(lengths)
 
-                locus_names = [locus.split("|")[1] for locus in locus_to_sequence_map]
-                locus_name_model = make_locus_name_markov_model(locus_names)
+        if decoy_strategy == 'markov':
+            sequence_model = make_sequence_markov_model(sequences, markov_state_size)
 
-                gene_names = [locus.split("|")[1].split("_")[0] for locus in locus_to_sequence_map]
-                gene_name_model = make_gene_name_markov_model(gene_names)
+        if decoy_strategy == 'deBruijn':
+            nodes = construct_bruijn_graph(sequences, kmer_size)
+            concatenated_sequence = "".join(sequences)
+            amino_acids_count = Counter(concatenated_sequence)
+            amino_acids_frequency = {aa: amino_acids_count[aa] / len(concatenated_sequence) for aa in
+                                     amino_acids_count}
+            randomize_nodes(nodes, static_amino_acids, amino_acids_frequency)
 
-            if decoy_strategy == 'deBruijn':
-                nodes = construct_bruijn_graph(sequences, kmer_size)
-                concatenated_sequence = "".join(sequences)
-                amino_acids_count = Counter(concatenated_sequence)
-                amino_acids_frequency = {aa: amino_acids_count[aa] / len(concatenated_sequence) for aa in
-                                         amino_acids_count}
-                randomize_nodes(nodes, static_amino_acids, amino_acids_frequency)
+        decoy_records = []
+        for record in records:
 
-            decoy_locus_to_sequence_map = {}
-            for locus in locus_to_sequence_map:
-                decoy_locus = decoy_flag + locus
-                decoy_description = locus_to_sequence_map[locus]['description']
+            sequence = str(record.seq)
+            decoy_record = copy.deepcopy(record)
+            decoy_record.name = decoy_flag + record.name
+            decoy_record.id = decoy_flag + record.id
 
-                sequence = locus_to_sequence_map[locus]['sequence']
-                if decoy_strategy == 'reverse':
-                    decoy_sequence = reverse_sequence(sequence)
-                elif decoy_strategy == 'shuffle':
-                    if static_amino_acids:
-                        decoy_sequence = static_shuffle_sequence(sequence, static_amino_acids)
-                    else:
-                        decoy_sequence = shuffle_sequence(sequence)
-                elif decoy_strategy == 'markov':
+            if decoy_strategy == 'reverse':
+                decoy_record.seq = Seq(reverse_sequence(sequence))
+            elif decoy_strategy == 'shuffle':
+                if static_amino_acids:
+                    decoy_record.seq = Seq(static_shuffle_sequence(sequence, static_amino_acids))
+                else:
+                    decoy_record.seq = Seq(shuffle_sequence(sequence))
+            elif decoy_strategy == 'markov':
 
-                    decoy_sequence = predict_sequence_from_markov_model(sequence_model, min_len, max_len)
-                    locus_name = predict_locus_name_from_markov_model(locus_name_model, 2, 10)
-                    gene_name = predict_gene_name_from_markov_model(gene_name_model, 2, 10)
+                decoy_record.seq = Seq(predict_sequence_from_markov_model(sequence_model, min_len, max_len))
 
-                    if locus_name is None:
-                        locus_name = "XXX"
+            elif decoy_strategy == 'exchange':
+                decoy_record.seq = Seq(exchange_sequence(sequence, aa_exchange_map))
 
-                    if gene_name is None:
-                        gene_name = "YYY_ORG"
+            elif decoy_strategy == "shifted reversal":
+                decoy_record.seq = Seq(shift_reverse_sequence(sequence, shifted_amino_acids))
 
-                    decoy_description = "Made up Protein"
-                    decoy_locus = f"{decoy_flag}|{locus_name}|{gene_name}"
+            elif decoy_strategy == 'deBruijn':
+                decoy_record.seq = Seq(construct_sequence(nodes, sequence, kmer_size))
 
-                elif decoy_strategy == 'exchange':
-                    decoy_sequence = exchange_sequence(sequence, aa_exchange_map)
+            decoy_records.append(decoy_record)
 
-                elif decoy_strategy == "shifted reversal":
-                    decoy_sequence = shift_reverse_sequence(sequence, shifted_amino_acids)
+        static_tag = ""
+        if static_amino_acids:
+            aa_tag = ''.join([aa for aa in static_amino_acids])
+            static_tag = f"_static_{aa_tag}"
 
-                elif decoy_strategy == 'deBruijn':
-                    decoy_sequence = construct_sequence(nodes, sequence, kmer_size)
+        shifted_tag = ""
+        if shifted_amino_acids:
+            aa_tag = ''.join([aa for aa in shifted_amino_acids])
+            shifted_tag = f"_{aa_tag}"
 
-                decoy_locus_to_sequence_map[decoy_locus] = {'description': decoy_description,
-                                                            'sequence': decoy_sequence}
+        exchange_tag = ""
+        if aa_exchange_map:
+            aa_tag = '_'.join([f"{aa}{aa_exchange_map[aa]}" for aa in aa_exchange_map if aa != aa_exchange_map[aa]])
+            exchange_tag = f"_{aa_tag}"
 
-            static_tag = ""
-            if static_amino_acids:
-                aa_tag = ''.join([aa for aa in static_amino_acids])
-                static_tag = f"_static_{aa_tag}"
+        markov_memory_tag = ""
+        if markov_state_size:
+            markov_memory_tag = f'_memory_{markov_state_size}'
 
-            shifted_tag = ""
-            if shifted_amino_acids:
-                aa_tag = ''.join([aa for aa in shifted_amino_acids])
-                shifted_tag = f"_{aa_tag}"
+        random_seed_tag = ""
+        if random_seed:
+            random_seed_tag = f'_seed_{random_seed}'
 
-            exchange_tag = ""
-            if aa_exchange_map:
-                aa_tag = '_'.join([f"{aa}{aa_exchange_map[aa]}" for aa in aa_exchange_map if aa != aa_exchange_map[aa]])
-                exchange_tag = f"_{aa_tag}"
+        kmer_size_tag = ""
+        if kmer_size:
+            kmer_size_tag = f'_kmer_{kmer_size}'
 
-            markov_memory_tag = ""
-            if markov_state_size:
-                markov_memory_tag = f'_memory_{markov_state_size}'
+        param_tag = f'{static_tag}{shifted_tag}{exchange_tag}{markov_memory_tag}{random_seed_tag}{kmer_size_tag}'
 
-            random_seed_tag = ""
-            if random_seed:
-                random_seed_tag = f'_seed_{random_seed}'
+        with make_temp_file() as tmp_file:
+            SeqIO.write(records + decoy_records, tmp_file, file_type)
+            with open(tmp_file) as file:
+                combined_contents = file.read()
 
-            kmer_size_tag = ""
-            if kmer_size:
-                kmer_size_tag = f'_kmer_{kmer_size}'
-
-            param_tag = f'{static_tag}{shifted_tag}{exchange_tag}{markov_memory_tag}{random_seed_tag}{kmer_size_tag}'
-            new_fasta_combined_lines = fasta_from_locus_to_sequence_map({**locus_to_sequence_map, **decoy_locus_to_sequence_map})
-            new_fasta_decoy_lines = fasta_from_locus_to_sequence_map(decoy_locus_to_sequence_map)
+        with make_temp_file() as tmp_file:
+            SeqIO.write(decoy_records, tmp_file, file_type)
+            with open(tmp_file) as file:
+                decoy_contents = file.read()
 
 
-            def create_fasta_file_name(combined: bool):
-                return f"{Path(fasta_file.name).stem}_{decoy_strategy.replace(' ', '_')}" \
-                              f"{param_tag}_combined_{combined}.fasta".lower()
+        def create_fasta_file_name(combined: bool):
+            return f"{Path(fasta_file.name).stem}_{decoy_strategy.replace(' ', '_')}" \
+                          f"{param_tag}_combined_{combined}.fasta".lower()
 
-            st.download_button(f"Download Combined",
-                               "".join(new_fasta_combined_lines),
-                               file_name=create_fasta_file_name(combined=True))
+        st.download_button(f"Download Combined",
+                           combined_contents,
+                           file_name=create_fasta_file_name(combined=True))
 
-            st.download_button(f"Download Reverse",
-                               "".join(new_fasta_decoy_lines),
-                               file_name=create_fasta_file_name(combined=False))
+        st.download_button(f"Download Decoy",
+                           decoy_contents,
+                           file_name=create_fasta_file_name(combined=False))
