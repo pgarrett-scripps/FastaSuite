@@ -19,6 +19,10 @@ min_len, max_len = st.slider(label="Min/Max Peptide Lengths", min_value=0, max_v
                              help=MIN_MAX_PEPTIDE_LENGTH_HELP_MESSAGE)
 decoy_flag = st.text_input(label="Decoy Flag", value="DECOY_", help=DECOY_FLAG_HELP_MESSAGE)
 
+MAX_PEPTIDES = 250_000
+with st.expander('Advance Params'):
+    max_peptides = st.number_input(label='maximum number of peptides to digest', value=MAX_PEPTIDES)
+
 if st.button("Run"):
     if not fasta_file:
         st.warning('Upload a FASTA file!')
@@ -34,10 +38,21 @@ if st.button("Run"):
             else:
                 target_sequences.append(locus_to_sequence_map[locus]['sequence'])
 
-        target_peptides = [peptide for sequence in target_sequences for peptide in
-                           digest_sequence(sequence, enzyme_residues, min_len, max_len)]
-        decoy_peptides = [peptide for sequence in decoy_sequences for peptide in
-                          digest_sequence(sequence, enzyme_residues, min_len, max_len)]
+        target_peptides = []
+        for sequence in target_sequences:
+            peptides = digest_sequence(sequence, enzyme_residues, min_len, max_len)
+            target_peptides.extend(peptides)
+            if len(target_peptides) >= max_peptides:
+                target_peptides = target_peptides[:max_peptides]
+                break
+
+        decoy_peptides = []
+        for sequence in decoy_sequences:
+            peptides = digest_sequence(sequence, enzyme_residues, min_len, max_len)
+            decoy_peptides.extend(peptides)
+            if len(decoy_peptides) >= max_peptides:
+                decoy_peptides = decoy_peptides[:max_peptides]
+                break
 
         st.subheader("Target")
         fasta_target_stats = score_fasta(target_sequences, target_peptides)

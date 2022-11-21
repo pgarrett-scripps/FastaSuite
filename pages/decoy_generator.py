@@ -158,9 +158,18 @@ if st.button("Generate Decoys"):
                 kmer_size_tag = f'_kmer_{kmer_size}'
 
             param_tag = f'{static_tag}{shifted_tag}{exchange_tag}{markov_memory_tag}{random_seed_tag}{kmer_size_tag}'
-            new_fasta_lines = fasta_from_locus_to_sequence_map({**locus_to_sequence_map, **decoy_locus_to_sequence_map})
-            fasta_file_name = f"{Path(fasta_file.name).stem}_{decoy_strategy.replace(' ', '_')}" \
-                              f"{param_tag}.fasta".lower()
-            st.download_button(f"Download {fasta_file_name}",
-                               "".join(new_fasta_lines),
-                               file_name=fasta_file_name)
+            new_fasta_combined_lines = fasta_from_locus_to_sequence_map({**locus_to_sequence_map, **decoy_locus_to_sequence_map})
+            new_fasta_decoy_lines = fasta_from_locus_to_sequence_map(decoy_locus_to_sequence_map)
+
+
+            def create_fasta_file_name(combined: bool):
+                return f"{Path(fasta_file.name).stem}_{decoy_strategy.replace(' ', '_')}" \
+                              f"{param_tag}_combined_{combined}.fasta".lower()
+
+            st.download_button(f"Download Combined",
+                               "".join(new_fasta_combined_lines),
+                               file_name=create_fasta_file_name(combined=True))
+
+            st.download_button(f"Download Reverse",
+                               "".join(new_fasta_decoy_lines),
+                               file_name=create_fasta_file_name(combined=False))
