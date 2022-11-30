@@ -6,3 +6,5 @@ requests~=2.28.1
 numpy~=1.23.3
 markovify~=0.9.4
 git+https://github.com/pgarrett-scripps/senpy.git
+
+lxml==4.9.1
