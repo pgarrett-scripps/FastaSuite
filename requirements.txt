@@ -4,5 +4,5 @@ nump
 pandas
 Requests
 scipy
-senpy==0.0.2
-streamlit==1.47.1
+streamlit
+git+https://github.com/pgarrett-scripps/senpy.git
