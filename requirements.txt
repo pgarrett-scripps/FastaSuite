@@ -1,8 +1,8 @@
-pandas~=1.5.0
-streamlit~=1.44.0
-matplotlib~=3.6.0
-scipy~=1.9.1
-requests~=2.28.1
-numpy~=1.23.3
-markovify~=0.9.4
-git+https://github.com/pgarrett-scripps/senpy.git
+markovify==0.9.4
+matplotlib==3.10.3
+numpy==2.3.2
+pandas==2.3.1
+Requests==2.32.4
+scipy==1.16.1
+senpy==0.0.2
+streamlit==1.47.1
