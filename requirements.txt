@@ -1,8 +1,8 @@
-markovify==0.9.4
-matplotlib==3.10.3
-numpy==2.3.2
-pandas==2.3.1
-Requests==2.32.4
-scipy==1.16.1
+markovify
+matplotlib
+nump
+pandas
+Requests
+scipy
 senpy==0.0.2
 streamlit==1.47.1
